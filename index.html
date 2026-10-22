@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Lyric Editor</title>
+  <!-- Netlify Identity Widget -->
+  <script type="text/javascript" src="https://identity.netlify.com/v1/netlify-identity-widget.js"></script>
+</head>
+<body>
+
+  <div id="logged-out-view">
+    <h1>Welcome to Lyric Locker</h1>
+    <button onclick="netlifyIdentity.open()">Log In / Sign Up with Google</button>
+  </div>
+
+  <div id="logged-in-view" style="display:none;">
+    <h2 id="welcome-user"></h2>
+    <button onclick="netlifyIdentity.logout()">Log Out</button>
+    
+    <br><br>
+    <input type="text" id="song-title" placeholder="Song Title">
+    <br><br>
+    <textarea id="song-lyrics" rows="10" cols="30" placeholder="Type lyrics here..."></textarea>
+    <br>
+    <button onclick="saveLyrics()">Save to Account</button>
+  </div>
+
+  <script>
+    // Handle UI changes based on auth state
+    netlifyIdentity.on('init', user => handleUser(user));
+    netlifyIdentity.on('login', user => { handleUser(user); netlifyIdentity.close(); });
+    netlifyIdentity.on('logout', () => handleUser(null));
+
+    function handleUser(user) {
+      if (user) {
+        document.getElementById('logged-out-view').style.display = 'none';
+        document.getElementById('logged-in-view').style.display = 'block';
+        document.getElementById('welcome-user').innerText = `Hello, ${user.user_metadata.full_name || user.email}`;
+        loadUserLyrics(user);
+      } else {
+        document.getElementById('logged-out-view').style.display = 'block';
+        document.getElementById('logged-in-view').style.display = 'none';
+      }
+    }
+
+    async function saveLyrics() {
+      const user = netlifyIdentity.currentUser();
+      const title = document.getElementById('song-title').value;
+      const lyrics = document.getElementById('song-lyrics').value;
+
+      const response = await fetch('/.netlify/functions/save-lyrics', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${user.token.access_token}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ title, lyrics })
+      });
+
+      if (response.ok) alert('Saved successfully!');
+    }
+
+    async function loadUserLyrics(user) {
+      const response = await fetch('/.netlify/functions/get-lyrics', {
+        headers: { 'Authorization': `Bearer ${user.token.access_token}` }
+      });
+      if (response.ok) {
+        const data = await response.json();
+        document.getElementById('song-title').value = data.title || '';
+        document.getElementById('song-lyrics').value = data.lyrics || '';
+      }
+    }
+  </script>
+</body>
+</html>
