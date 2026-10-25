@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="theme-blue" data-monospace-editor="false">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telperion Lyric Locker</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <nav class="navbar">
+        <div id="header-name" class="brand">Lyric Locker</div>
+        <div class="nav-actions">
+            <button onclick="showsettings()" class="btn"><i class="fa-solid fa-gear"></i> Settings</button>
+            <button onclick="exportData()" class="btn"><i class="fa-solid fa-download"></i> Export Backup
+                (.json)</button>
+            <button onclick="document.getElementById('importFile').click()" class="btn"><i
+                    class="fa-solid fa-upload"></i> Import Backup</button>
+            <input type="file" id="importFile" accept=".json" onchange="importData(event)" hidden>
+        </div>
+    </nav>
+    <main class="app-container">
+        <!-- Projects Column -->
+        <aside class="sidebar" id="projects-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-record-vinyl"></i> Projects</h2>
+                <button id="project-wizard-btn" class="btn-icon" title="New Project">+</button>
+            </div>
+            <ul id="projectsList" class="list-group"></ul>
+        </aside>
+
+        <!-- Songs Column -->
+        <aside class="sidebar" id="songs-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-music"></i> Songs</h2>
+                <button id="newSongBtn" class="btn-icon" title="New Song" id="newSongBtn" disabled>+</button>
+            </div>
+            <ul id="songsList" class="list-group"></ul>
+        </aside>
+
+        <!-- Main Editor -->
+        <section class="editor-panel" id="editorPanel">
+            <div class="empty-state">Select or create a project to begin.</div>
+        </section>
+
+
+        <dialog id="custom-prompt-modal" class="prompt-modal">
+            <form method="dialog" id="prompt-form" class="prompt-form">
+                <h2 id="prompt-title" class="prompt-heading">Input Required</h2>
+                <p id="prompt-message" class="prompt-text">Please enter your text below:</p>
+
+                <div class="input-group">
+                    <input type="text" id="prompt-input" autocomplete="off" required>
+                    <span class="error-message" id="input-error">This field cannot be left blank.</span>
+                </div>
+
+                <div class="prompt-actions">
+                    <button type="button" id="prompt-cancel-btn" class="btn btn-secondary">Cancel</button>
+                    <button type="submit" id="prompt-submit-btn" class="btn btn-success">Confirm</button>
+                </div>
+            </form>
+        </dialog>
+
+        <dialog id="settings-modal" class="prompt-modal">
+            <form method="dialog" id="settings-form" class="prompt-form">
+                <h2 class="prompt-heading">Settings</h2>
+
+                <section>
+                    <h5>Appearance</h5>
+                    <div class="toggle-row">
+                        <span class="toggle-label">Light Mode</span>
+
+                        <!-- The sliding switch from Option 1 -->
+                        <label class="switch">
+                            <input type="checkbox" id="theme-checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <span class="toggle-label">Theme</span>
+                    <div class="colors-list">
+                        <input name="theme-select" type="radio" id="theme-blue">
+                        <input name="theme-select" type="radio" id="theme-purple">
+                        <input name="theme-select" type="radio" id="theme-red">
+                        <input name="theme-select" type="radio" id="theme-green">
+                        <input name="theme-select" type="radio" id="theme-gray">
+                    </div>
+                </section>
+
+                <section>
+                    <h5>Editor</h5>
+                    <div class="toggle-row">
+                        <span class="toggle-label">Monospace</span>
+
+                        <!-- The sliding switch from Option 1 -->
+                        <label class="switch">
+                            <input type="checkbox" id="monospace-checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </section>
+
+
+                <div class="prompt-actions">
+                    <button onclick="closeSettings()" type="button" class="btn btn-secondary">Cancel</button>
+                    <button onclick="saveSettings()" type="button" class="btn btn-success">Save</button>
+                </div>
+            </form>
+        </dialog>
+
+
+
+    </main>
+    <script src="app.js"></script>
+</body>
+
+</html>
