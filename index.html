@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="theme-blue" data-monospace-editor="false">
+<html lang="en" data-animations="true" data-theme="theme-blue" data-monospace-editor="false">
 
 <head>
     <meta charset="UTF-8">
@@ -22,13 +22,38 @@
         </div>
     </nav>
     <main class="app-container">
+        <aside class="sidebar" id="plugins-panel">
+            <button id="projects-panel-icon" class="navicon" onclick="handlePanel('projects')">
+                <h2><i class="fa-solid fa-record-vinyl"></i></h2>
+            </button>
+            <button id="rhymes-panel-icon" class="navicon" onclick="handlePanel('rhymes')">
+                <h2><i class="fa-solid fa-pen-fancy"></i></h2>
+            </button>
+            <button id="notes-panel-icon" class="navicon" onclick="handlePanel('notes')">
+                <h2><i class="fa-solid fa-book"></i></h2>
+            </button>
+            <button id="comments-panel-icon" class="navicon" onclick="handlePanel('comments')">
+                <h2><i class="fa-solid fa-comment"></i></h2>
+            </button>
+            <button id="todo-panel-icon" class="navicon" onclick="handlePanel('todo')">
+                <h2><i class="fa-solid fa-circle-check"></i></h2>
+            </button>
+            <button id="stats-panel-icon" class="navicon" onclick="handlePanel('stats')">
+                <h2><i class="fa-solid fa-square-poll-vertical"></i></h2>
+            </button>
+            <button id="info-panel-icon" class="navicon" onclick="handlePanel('info')">
+                <h2><i class="fa-solid fa-circle-info"></i></h2>
+            </button>
+        </aside>
         <!-- Projects Column -->
         <aside class="sidebar" id="projects-panel">
             <div class="panel-header">
                 <h2><i class="fa-solid fa-record-vinyl"></i> Projects</h2>
                 <button id="project-wizard-btn" class="btn-icon" title="New Project">+</button>
             </div>
-            <ul id="projectsList" class="list-group"></ul>
+            <div class="fileslist">
+                <ul id="projectsList" class="list-group"></ul>
+            </div>
         </aside>
 
         <!-- Songs Column -->
@@ -37,7 +62,111 @@
                 <h2><i class="fa-solid fa-music"></i> Songs</h2>
                 <button id="newSongBtn" class="btn-icon" title="New Song" id="newSongBtn" disabled>+</button>
             </div>
-            <ul id="songsList" class="list-group"></ul>
+            <div class="fileslist">
+                <ul id="songsList" class="list-group"></ul>
+            </div>
+        </aside>
+
+        <aside class="sidebar" id="rhymes-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-pen-fancy"></i> Rhyme Finder</h2>
+            </div>
+
+            <div class="panel-section">
+                <p class="panel-label-p" id="notes-label">Feeling stuck? Search rhymes to help you find your groove.
+                    Click on a rhyme to copy it.</p>
+                <div class="input-and-search-button">
+                    <input class="panel-input" type="text" id="rhyme-input"
+                        placeholder="Type a word to rhyme (e.g., 'fire')">
+                    <button class="btn" onclick="findRhymes()"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                <div id="rhyme-results" style="display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px;">
+                    <!-- Rhymes will populate here -->
+                </div>
+            </div>
+        </aside>
+
+        <aside class="sidebar" id="notes-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-book"></i> Notes</h2>
+            </div>
+            <div class="panel-section">
+                <p class="panel-label-p" id="notes-label">Notes are associated with their project, not with specific
+                    songs.</p>
+                <textarea oninput="updateNotes()" id="notes-textarea"></textarea>
+            </div>
+        </aside>
+
+        <aside class="sidebar" id="comments-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-comment"></i> Comments</h2>
+            </div>
+
+            <div class="panel-section">
+                <ul id="comments-list">
+
+                </ul>
+
+                <div class="input-and-search-button">
+                    <input class="panel-input" type="text" id="comment-input"
+                        placeholder="Enter a comment on your song">
+                    <button class="btn" onclick="postComment()"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+
+            </div>
+        </aside>
+
+        <aside class="sidebar" id="todo-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-circle-check"></i> Tasks</h2>
+            </div>
+            <div class="todo-panel">
+                <div id="project-todo-section">
+                    <div class="todo-header">
+                        <h3>Project</h3>
+                        <button id="project-todo-button" class="btn-icon" title="New Task"
+                            onclick="newProjectTodo('project')">+</button>
+                    </div>
+                    <ul class="todo-list" id="project-todo-list"></ul>
+                </div>
+                <div id="song-todo-section">
+                    <div class="todo-header">
+                        <h3>Song</h3>
+                        <button id="song-todo-button" class="btn-icon" title="New Task"
+                            onclick="newSongTodo('song')">+</button>
+                    </div>
+                    <ul class="todo-list" id="song-todo-list"></ul>
+                </div>
+            </div>
+
+        </aside>
+
+        <aside class="sidebar" id="stats-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-square-poll-vertical"></i> Project Stats</h2>
+            </div>
+            <div class="panel-section" id="stats-section">
+                <h4><span id="song-count">error</span> songs in project</h4>
+                <h4>Songs have an average of <span id="average-word-count">error</span> words</h4>
+
+
+                <h4>Song Word Count: <span id="word-count">error</span></h4>
+
+            </div>
+
+        </aside>
+        <aside class="sidebar" id="info-panel">
+            <div class="panel-header">
+                <h2><i class="fa-solid fa-circle-info"></i> App Information</h2>
+            </div>
+            <div class="panel-section">
+                <h3>Telperion Lyric Locker</h3>
+                <p><strong>Version: </strong> <span id="app-version"></span></p>
+                <p>Created by Keaton Auld</p>
+                <ul id="changelog-list">
+
+                </ul>
+            </div>
         </aside>
 
         <!-- Main Editor -->
@@ -87,6 +216,16 @@
                         <input name="theme-select" type="radio" id="theme-green">
                         <input name="theme-select" type="radio" id="theme-gray">
                     </div>
+
+                    <div class="toggle-row">
+                        <span class="toggle-label">Animations</span>
+
+                        <!-- The sliding switch from Option 1 -->
+                        <label class="switch">
+                            <input type="checkbox" id="animations-checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
                 </section>
 
                 <section>
@@ -97,6 +236,19 @@
                         <!-- The sliding switch from Option 1 -->
                         <label class="switch">
                             <input type="checkbox" id="monospace-checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </section>
+
+                <section>
+                    <h5>Tasks</h5>
+                    <div class="toggle-row">
+                        <span class="toggle-label">Hide Completed</span>
+
+                        <!-- The sliding switch from Option 1 -->
+                        <label class="switch">
+                            <input type="checkbox" id="todo-hide-checkbox">
                             <span class="slider"></span>
                         </label>
                     </div>

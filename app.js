@@ -19,6 +19,11 @@ function init() {
     } else {
         renderEditor();
     }
+    renderComments();
+    renderStats();
+    renderTodos();
+    loadAppVersionData();
+
 }
 
 // Data Persistence
@@ -41,7 +46,8 @@ function createProject() {
     const name = prompt("Enter Project/Album Name:");
     if (!name || name.trim() === "") return;
 
-    const newProject = { id: generateId(), name: name.trim(), songs: [] };
+    const newProject = { id: generateId(), name: name.trim(), songs: [], notes: (name.trim() + " - created on " + getTime()), todo: [] };
+    console.log(newProject.notes)
     data.projects.push(newProject);
     saveData();
     selectProject(newProject.id);
@@ -58,8 +64,24 @@ function deleteProject(id, event) {
     }
     saveData();
     renderProjects();
+    renderComments();
+    renderStats();
+    renderTodos();
     if (data.projects.length > 0) selectProject(data.projects[0].id);
     else { renderSongs(); renderEditor(); }
+}
+
+function deleteComment(id, event) {
+    event.stopPropagation();
+
+    const project = data.projects.find(p => p.id === currentProjectId);
+    const song = project.songs.find(s => s.id === currentSongId);
+
+    song.comments = song.comments.filter(p => p.id !== id);
+
+    saveData();
+    renderComments();
+    renderStats();
 }
 
 function selectProject(id) {
@@ -70,7 +92,7 @@ function selectProject(id) {
     renderSongs();
 
     const project = data.projects.find(p => p.id === id);
-    document.getElementById("header-name").innerHTML=project.name;
+    document.getElementById("header-name").innerHTML = project.name;
     if (project && project.songs.length > 0) {
         selectSong(project.songs[0].id);
     } else {
@@ -91,6 +113,9 @@ function createSong() {
     saveData();
     selectSong(newSong.id);
     renderSongs();
+    renderComments();
+    renderStats();
+    renderTodos();
 }
 
 function deleteSong(id, event) {
@@ -104,6 +129,9 @@ function deleteSong(id, event) {
 
     saveData();
     renderSongs();
+    renderComments();
+    renderStats();
+    renderTodos();
     if (project.songs.length > 0) selectSong(project.songs[0].id);
     else renderEditor();
 }
@@ -123,6 +151,19 @@ function updateSong(field, value) {
     saveData();
 
     if (field === 'title') renderSongs(); // Update sidebar immediately
+    renderStats();
+}
+
+
+function updateNotes() {
+    if (!currentProjectId) return;
+
+    const project = data.projects.find(p => p.id === currentProjectId);
+
+    const notes = document.getElementById('notes-textarea');
+
+    project.notes = notes.value;
+    saveData();
 }
 
 /* --- UI Rendering --- */
@@ -135,11 +176,13 @@ function renderProjects() {
         li.onclick = () => selectProject(p.id);
         li.innerHTML = `
             <span>${escapeHTML(p.name)}</span>
-            <button class="delete-item-btn" onclick="deleteProject('${p.id}', event)">✕</button>
+            <button class="delete-item-btn" onclick="deleteProject('${p.id}', event)"><i class="fa-solid fa-circle-xmark"></i></button>
         `;
         list.appendChild(li);
     });
     if (data.projects.length === 0) document.getElementById('newSongBtn').disabled = true;
+
+    renderNotes();
 
     //console.log("Rendering Projects")
 }
@@ -159,12 +202,28 @@ function renderSongs() {
         li.id = s.id;
         li.innerHTML = `
             <span>${escapeHTML(s.title)}</span>
-            <button class="delete-item-btn" onclick="deleteSong('${s.id}', event)">✕</button>
+            <button class="delete-item-btn" onclick="deleteSong('${s.id}', event)"><i class="fa-solid fa-circle-xmark"></i></button>
         `;
         list.appendChild(li);
     });
 
     //console.log("Rendering Songs")
+}
+
+function renderNotes() {
+    const textarea = document.getElementById("notes-textarea");
+    if (!currentProjectId) {
+        textarea.value = '';
+        textarea.disabled = true;
+        return
+    }
+    else {
+        textarea.disabled = false
+        const project = data.projects.find(p => p.id === currentProjectId);
+
+
+        textarea.value = project.notes;
+    }
 }
 
 function renderEditor() {
@@ -197,6 +256,9 @@ function renderEditor() {
         </div>
         <textarea class="lyrics-input" oninput="updateSong('lyrics', this.value)" placeholder="Start writing lyrics here...">${escapeHTML(song.lyrics)}</textarea>
     `;
+    renderComments();
+    renderStats();
+    renderTodos();
 }
 
 /* --- Import/Export (File I/O) --- */
@@ -234,6 +296,89 @@ function importData(event) {
     reader.readAsText(file);
     event.target.value = ''; // Reset input so same file can be uploaded again if needed
 }
+
+const appVersionData = {
+    version:"1.0.0",
+    changelog:[
+        {
+            date:"11/1/2026",
+            version:"1.0.0",
+            overview:"First deployed version of the app.",
+            bullets:["Create and edit projects and songs","Local storage for settings and projects","Option for json export and import","Dark and Light theme with adjustable theme colors","Rhyme search engine","Project notes and song comments","Task tracker"]
+        }
+    ]
+}
+
+async function loadAppVersionData() {
+/*   try {
+    // Relative path to your local JSON file
+    const response = await fetch('./data.json'); 
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const d = await response.json();
+    console.log(d); // Your JSON object is ready here
+  } catch (error) {
+    console.error("Could not load JSON file:", error);
+  } */
+
+    const version=document.getElementById('app-version');
+    version.innerHTML=appVersionData.version;
+    const list=document.getElementById('changelog-list')
+    appVersionData.changelog.forEach(p => {
+        // console.log(p);
+        const li = document.createElement('li');
+        const bullets=document.createElement('ul');
+        const info=document.createElement('div')
+        p.bullets.forEach(b=>{
+            const bul=document.createElement('li');
+            bul.innerHTML=b;
+            bullets.appendChild(bul);
+        })
+        li.classList.add("changelog-item");
+        info.innerHTML = `
+        <h4 class="changelog-version">${p.version}</h4>
+        <p class="changelog-date">${p.date}</p>
+        <p class="changelog-overview">${p.overview}</p>
+        `;
+        li.appendChild(info);
+        li.appendChild(bullets);
+
+        list.appendChild(li);
+    });
+}
+
+const wordCount = (text) => text.trim() === "" ? 0 : text.trim().split(/\s+/).length;
+
+function renderStats(){
+    // PROJECT STATS FIRST
+    if (!currentProjectId) return;
+    const project = data.projects.find(p => p.id === currentProjectId);
+    songcount=project.songs.length;
+    const songcounter=document.getElementById("song-count");
+    songcounter.innerHTML=songcount;
+
+    var averagewordcount=0
+    project.songs.forEach(s=>{
+        averagewordcount+=wordCount(s.lyrics)
+    })
+    averagewordcount=Math.round(averagewordcount/project.songs.length);
+    const averagewordcounter=document.getElementById("average-word-count");
+    averagewordcounter.innerHTML=averagewordcount;
+
+
+
+    // ONLY SONG STATS FROM HERE ON OUT
+    // word count
+    if(!currentSongId) return;
+    const song = project.songs.find(s => s.id === currentSongId);
+    words=wordCount(song.lyrics);
+    const wordcounter=document.getElementById("word-count");
+    wordcounter.innerHTML=words;
+}
+
 
 class CustomPrompt {
     constructor() {
@@ -313,6 +458,15 @@ function showsettings() {
         lightmode.checked = false;
     }
 
+    const animations = document.getElementById("animations-checkbox");
+
+    if (localStorage.getItem('data-animations') == "true") {
+        animations.checked = true;
+    }
+    else {
+        animations.checked = false;
+    }
+
     document.getElementById(localStorage.getItem("data-theme")).checked = true;
 
     const monospace = document.getElementById("monospace-checkbox");
@@ -322,6 +476,15 @@ function showsettings() {
     }
     else {
         monospace.checked = false;
+    }
+
+    const hidetodo = document.getElementById("todo-hide-checkbox");
+
+    if (localStorage.getItem('data-hide-todos') == "true") {
+        hidetodo.checked = true;
+    }
+    else {
+        hidetodo.checked = false;
     }
 
 }
@@ -355,6 +518,26 @@ function saveSettings() {
         localStorage.setItem('data-light-mode', "false");
     }
 
+    const animations = document.getElementById("animations-checkbox");
+    if (animations.checked) {
+        document.documentElement.setAttribute('data-animations', "true");
+        localStorage.setItem('data-animations', "true");
+    }
+    else {
+        document.documentElement.setAttribute('data-animations', "false");
+        localStorage.setItem('data-animations', "false");
+    }
+
+    const hidetodo = document.getElementById("todo-hide-checkbox");
+    if (hidetodo.checked) {
+        document.documentElement.setAttribute('data-hide-todos', "true");
+        localStorage.setItem('data-hide-todos', "true");
+    }
+    else {
+        document.documentElement.setAttribute('data-hide-todos', "false");
+        localStorage.setItem('data-hide-todos', "false");
+    }
+
 
     if (currentSongId !== null) {
         renderEditor();
@@ -363,10 +546,19 @@ function saveSettings() {
     document.getElementById("settings-modal").close();
 }
 
+let styleSettings = [['data-theme', 'theme-blue'], ['data-light-mode', 'false'], ['data-monospace-editor', 'true'], ['data-animations', 'true'], ['data-hide-todos','false']]
+
 function loadSettings() {
-    document.documentElement.setAttribute('data-theme', localStorage.getItem('data-theme'));
-    document.documentElement.setAttribute('data-light-mode', localStorage.getItem('data-light-mode'));
-    document.documentElement.setAttribute('data-monospace-editor', localStorage.getItem('data-monospace-editor'));
+    var variable;
+    for (setting in styleSettings) {
+        variable = localStorage.getItem(styleSettings[setting][0]);
+        if (variable) {
+            document.documentElement.setAttribute(styleSettings[setting][0], variable);
+        }
+        else {
+            document.documentElement.setAttribute(styleSettings[setting][0], styleSettings[setting][1])
+        }
+    }
 }
 
 // --- Application Logic Initialization ---
@@ -387,11 +579,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Process outputs natively
         if (username !== null) {
-            const newProject = { id: generateId(), name: username.trim(), songs: [] };
+            const newProject = { id: generateId(), name: username.trim(), songs: [], notes: username.trim() + " - created on " + new Date().toISOString(), todo: [] };
             data.projects.push(newProject);
             saveData();
             selectProject(newProject.id);
             renderProjects();
+            renderTodos();
         } else {
             return;
         }
@@ -408,19 +601,248 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Process outputs natively
         if (username !== null) {
-            const newSong = { id: generateId(), title: username.trim(), key: '', bpm: '', genre: '', lyrics: '' };
+            const newSong = { id: generateId(), title: username.trim(), key: '', bpm: '', genre: '', lyrics: '', comments: [], todo: [] };
             const project = data.projects.find(p => p.id === currentProjectId);
             project.songs.push(newSong);
 
             saveData();
             selectSong(newSong.id);
             renderSongs();
+            renderComments();
+            renderStats();
+            renderTodos();
         } else {
             return;
         }
     });
 
 });
+
+
+async function editComment(id, event) {
+    event.stopPropagation();
+    const project = data.projects.find(p => p.id === currentProjectId);
+    const song = project.songs.find(s => s.id === currentSongId);
+    const comment = song.comments.find(s => s.id === id);
+    const promptSystem = new CustomPrompt();
+
+    const edited = await promptSystem.show(
+        "Edit Comment",
+        "Enter your revised comment below:",
+        comment.text
+    );
+
+    // Process outputs natively
+    if (edited !== null) {
+        const newComment = { id: id, text: edited, date: comment.date };
+        const index = song.comments.findIndex(s => s.id === id);
+        song.comments.splice(index, 1, newComment);
+
+    } else {
+        return;
+    }
+
+    saveData();
+    renderComments();
+    renderStats();
+}
+
+function renderComments() {
+    const list = document.getElementById('comments-list');
+    const input = document.getElementById('comment-input');
+    list.innerHTML = '';
+    if (currentSongId === null) {
+        input.disabled = true;
+        return;
+    }
+    input.disabled = false;
+    const project = data.projects.find(p => p.id === currentProjectId);
+    const song = project.songs.find(s => s.id === currentSongId);
+    song.comments.forEach(p => {
+        const li = document.createElement('li');
+        li.innerHTML = `
+            <div class='comment-text'>
+            <span>${escapeHTML(p.date)}</span>
+            <p>${p.text}</p>
+            </div>
+            <button class="delete-item-btn" onclick="editComment('${p.id}', event)"><i class="fa-solid fa-pen"></i></button>
+            <button class="delete-item-btn" onclick="deleteComment('${p.id}', event)"><i class="fa-solid fa-circle-xmark"></i></button>
+        `;
+        list.appendChild(li);
+    });
+}
+
+function completeProjectTodo(id) {
+    if (currentProjectId == null) { return; };
+    const project = data.projects.find(p => p.id === currentProjectId);
+    const todo = project.todo.find(p => p.id === id);
+    if (todo.completed) {
+        todo.completed = false
+    }
+    else {
+        todo.completed = true
+    }
+    saveData();
+    renderTodos();
+}
+function completeSongTodo(id) {
+    if (currentSongId == null) { return; };
+    const project = data.projects.find(p => p.id === currentProjectId);
+    const song = project.songs.find(s => s.id === currentSongId);
+    const todo = song.todo.find(p => p.id === id);
+    if (todo.completed) {
+        todo.completed = false
+    }
+    else {
+        todo.completed = true
+    }
+    saveData();
+    renderTodos();
+}
+
+function deleteProjectTodo(id){
+    if (currentProjectId == null) { return; };
+    const project = data.projects.find(p => p.id === currentProjectId);
+
+    project.todo = project.todo.filter(p => p.id !== id);
+
+    saveData();
+    renderTodos();
+}
+
+function deleteSongTodo(id){
+    if (currentSongId == null) { return; };
+    const project = data.projects.find(p => p.id === currentProjectId);
+    const song = project.songs.find(s => s.id === currentSongId);
+
+    song.todo = song.todo.filter(p => p.id !== id);
+
+    saveData();
+    renderTodos();
+}
+
+function renderTodos() {
+    //project todos
+    const project = data.projects.find(p => p.id === currentProjectId);
+    const projectlist = document.getElementById('project-todo-list');
+    const projectbutton = document.getElementById('project-todo-button');
+    projectlist.innerHTML = '';
+    if (currentProjectId === null) {
+        projectbutton.disabled = true;
+        return;
+    }
+    projectbutton.disabled = false;
+    project.todo.forEach(p => {
+        const li = document.createElement('li');
+        li.classList.add('todo-item');
+        if (p.completed) {
+            li.classList.add('completed')
+        }
+        li.innerHTML = `
+            <div onclick=completeProjectTodo('${p.id}') class='todo-text'>
+            <p>${p.text}</p>
+            </div>
+            <button class="delete-item-btn" onclick="deleteProjectTodo('${p.id}', event)"><i class="fa-solid fa-circle-xmark"></i></button>
+        `;
+        projectlist.appendChild(li);
+    });
+
+
+    //song todos
+    const songlist = document.getElementById('song-todo-list');
+    const songbutton = document.getElementById('song-todo-button');
+    songlist.innerHTML = '';
+    if (currentSongId === null) {
+        songbutton.disabled = true;
+        return;
+    }
+    const song = project.songs.find(s => s.id === currentSongId);
+    songbutton.disabled = false;
+    song.todo.forEach(p => {
+        const li = document.createElement('li');
+        if (p.completed == true) {
+            li.classList.add('completed')
+        }
+        li.innerHTML = `
+            <div onclick=completeSongTodo('${p.id}') class='todo-text'>
+            <p>${p.text}</p>
+            </div>
+            <button class="delete-item-btn" onclick="deleteSongTodo('${p.id}', event)"><i class="fa-solid fa-circle-xmark"></i></button>
+        `;
+        songlist.appendChild(li);
+    });
+}
+
+async function newProjectTodo() {
+    if (currentProjectId == null) {
+        return;
+    }
+
+    const promptSystem = new CustomPrompt();
+
+    const project = data.projects.find(p => p.id === currentProjectId);
+
+    const todo = await promptSystem.show(
+        "New Project Task",
+        "Enter your task below:",
+        "Add a song..."
+    );
+
+    // Process outputs natively
+    if (todo !== null) {
+        const newTodo = { id: generateId(), text: todo, completed: false };
+        project.todo.push(newTodo);
+
+    } else {
+        return;
+    }
+
+    saveData();
+    renderTodos();
+}
+
+async function newSongTodo() {
+    if (currentSongId == null) {
+        return;
+    }
+
+    const project = data.projects.find(p => p.id === currentProjectId);
+    const song = project.songs.find(s => s.id === currentSongId);
+    const promptSystem = new CustomPrompt();
+
+    const todo = await promptSystem.show(
+        "New Song Task",
+        "Enter your task below:",
+        "Add a verse..."
+    );
+
+    // Process outputs natively
+    if (todo !== null) {
+        const newTodo = { id: generateId(), text: todo, completed: false };
+        song.todo.push(newTodo);
+
+    } else {
+        return;
+    }
+
+    saveData();
+    renderTodos();
+}
+
+function postComment() {
+    const input = document.getElementById('comment-input');
+    if (!input.value) { return };
+    const newComment = { id: generateId(), text: input.value, date: new Date().toISOString().split('T')[0] };
+    const project = data.projects.find(p => p.id === currentProjectId);
+    const song = project.songs.find(s => s.id === currentSongId);
+    song.comments.push(newComment);
+
+    input.value = '';
+
+    saveData();
+    renderComments();
+    renderStats();
+}
 
 
 const list = document.querySelector('#songsList');
@@ -433,6 +855,7 @@ list.addEventListener('dragstart', (e) => {
 });
 
 list.addEventListener('dragend', (e) => {
+    e.preventDefault();
     const draggingItem = document.querySelector('.dragging');
     // Get all items except the one currently being dragged
     const siblings = [...list.querySelectorAll('.item:not(.dragging)')];
@@ -453,15 +876,15 @@ list.addEventListener('dragend', (e) => {
         const song = project.songs.splice(project.songs.findIndex(s => s.id === draggingItem.id), 1);
         project.songs.splice(project.songs.findIndex(s => s.id === nextSibling.id), 0, song[0]);
     } else {
-         // If we're at the very bottom, append to the end of the list
+        // If we're at the very bottom, append to the end of the list
         list.appendChild(draggingItem);
 
         const project = data.projects.find(p => p.id === currentProjectId);
         const song = project.songs.splice(project.songs.findIndex(s => s.id === draggingItem.id), 1);
 
         project.songs.push(song[0]);
-   }
-   saveData();
+    }
+    saveData();
     renderSongs();
 
     if (e.target.classList.contains('item')) {
@@ -477,11 +900,11 @@ list.addEventListener('dragover', (e) => {
     // Get all items except the one currently being dragged
     const siblings = [...list.querySelectorAll('.item:not(.dragging)')];
 
-    for (const sib of siblings){
-        if (sib.classList.contains("drag-hover")){
+    for (const sib of siblings) {
+        if (sib.classList.contains("drag-hover")) {
             sib.classList.remove("drag-hover")
         }
-        
+
     }
 
     // Find the sibling item that our mouse cursor is directly above
@@ -500,7 +923,110 @@ list.addEventListener('dragover', (e) => {
 
 });
 
+let panels = {
+    projects: {
+        icon: "projects-panel-icon",
+        panels: ["projects-panel", "songs-panel"]
+    },
+    rhymes: {
+        icon: "rhymes-panel-icon",
+        panels: ["rhymes-panel"]
+    },
+    notes: {
+        icon: "notes-panel-icon",
+        panels: ["notes-panel"]
+    },
+    comments: {
+        icon: "comments-panel-icon",
+        panels: ["comments-panel"]
+    },
+    todo: {
+        icon: "todo-panel-icon",
+        panels: ["todo-panel"]
+    },
+    stats: {
+        icon: "stats-panel-icon",
+        panels: ["stats-panel"]
+    },
+    info: {
+        icon: "info-panel-icon",
+        panels: ["info-panel"]
+    },
+}
 
+function handlePanel(panelName) {
+    const panel = panels[panelName];
+    const icon = document.getElementById(panel.icon)
+
+    //if we're closing the active panel, simply remove its active tab and hide the panels
+    if (icon.classList.contains("active")) {
+        icon.classList.remove("active");
+        for (item in panel.panels) {
+            document.getElementById(panel.panels[item]).style.display = "none"
+        }
+    }
+    // otherwise we need to deactivate any other panels and then fully activate the right one
+    else {
+        for (item in panels) {
+            document.getElementById(panels[item].icon).classList.remove("active");
+            for (i in panels[item].panels) {
+                document.getElementById(panels[item].panels[i]).style.display = "none"
+            }
+        }
+
+        icon.classList.add("active");
+        for (item in panel.panels) {
+            document.getElementById(panel.panels[item]).style.display = "block"
+        }
+    }
+}
+
+
+async function findRhymes() {
+    const word = document.getElementById('rhyme-input').value.trim();
+    const resultsContainer = document.getElementById('rhyme-results');
+    resultsContainer.innerHTML = 'Searching...';
+
+    if (!word) {
+        resultsContainer.innerHTML = 'Please enter a word.';
+        return;
+    }
+
+    try {
+        // Datamuse API endpoint for rhymes (rel_rhy)
+        const response = await fetch(`https://api.datamuse.com/words?rel_rhy=${encodeURIComponent(word)}&max=30`);
+        const data = await response.json();
+
+        resultsContainer.innerHTML = '';
+
+        if (data.length === 0) {
+            resultsContainer.innerHTML = 'No rhymes found.';
+            return;
+        }
+
+        // Loop through results and create stylish tags
+        data.forEach(item => {
+            const tag = document.createElement('span');
+            tag.innerText = item.word;
+            tag.classList.add("rhyme-pill");
+
+            // Optional: Click a rhyming word to copy it or paste it into your lyrics
+            tag.title = `Syllables: ${item.numSyllables}`;
+            tag.onclick = () => {
+                navigator.clipboard.writeText(item.word);
+                tag.style.background = 'var(--accent)';
+                setTimeout(() => tag.style.background = 'var(--bg-dark)', 500);
+            };
+
+            resultsContainer.appendChild(tag);
+        });
+
+    } catch (error) {
+        resultsContainer.innerHTML = 'Error fetching rhymes. Check your connection.';
+    }
+}
+
+handlePanel("projects")
 
 // Boot the app
 window.onload = init;

@@ -7,6 +7,7 @@
     --text-muted: #8b92a5;
     --border: #333333;
     --danger: #ff5555;
+    --main-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 :root[data-light-mode="true"] {
@@ -24,18 +25,22 @@
     --accent: #6272a4;
     --accent-blur: #6273a45c;
 }
+
 :root[data-theme="theme-purple"] {
     --accent: #8d62a4;
     --accent-blur: #8d62a489;
 }
+
 :root[data-theme="theme-red"] {
     --accent: #a24848;
     --accent-blur: #a248487d;
 }
+
 :root[data-theme="theme-green"] {
     --accent: #62a462;
     --accent-blur: #62a4628d;
 }
+
 :root[data-theme="theme-gray"] {
     --accent: #9e9e9f;
     --accent-blur: #9e9e9f84;
@@ -44,14 +49,39 @@
 :root[data-monospace-editor="true"] {
     --editor-font: monospace;
 }
-:root[data-monospace-editor="false"] {    
+
+:root[data-monospace-editor="false"] {
     --editor-font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+:root[data-animations="true"] {
+    --transition: 0.5s;
+}
+
+:root[data-animations="false"] {
+    --transition: 0s;
+}
+
+:root[data-hide-todos="false"] {
+    --todo-display: flex;
+}
+:root[data-hide-todos="true"] {
+    --todo-display: none;
 }
 
 * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    transition: var(--transition);
+}
+
+p {
+    color: var(--text-muted)
+}
+
+.panel-label-p{
+    margin-bottom:1%;
 }
 
 body {
@@ -67,6 +97,43 @@ body {
 ::selection {
     background-color: var(--accent);
 }
+
+/* 1. Standard approach (Firefox, modern Chrome/Safari) */
+html {
+    scrollbar-color: var(--bg-panel) var(--bg-dark);
+    /* thumb color | track color */
+    scrollbar-width: auto;
+    /* auto, thin, or none */
+}
+
+/* 2. WebKit/Blink approach (Chrome, Safari, Edge, Opera) */
+/* The entire scrollbar element */
+::-webkit-scrollbar {
+    width: 12px;
+    /* Width of vertical scrollbar */
+    height: 12px;
+    /* Height of horizontal scrollbar */
+}
+
+/* The track (background) of the scrollbar */
+::-webkit-scrollbar-track {
+    background: var(--bg-dark);
+    border-radius: 6px;
+}
+
+/* The draggable thumb (handle) */
+::-webkit-scrollbar-thumb {
+    background-color: var(--bg-panel);
+    border-radius: 6px;
+    border: 3px solid var(--bg-dark);
+    /* Creates padding around the thumb */
+}
+
+/* Hover effect on the draggable handle */
+::-webkit-scrollbar-thumb:hover {
+    background-color: var(--bg-highlight);
+}
+
 
 /* Navbar */
 .navbar {
@@ -93,7 +160,7 @@ body {
     padding: 6px 12px;
     border-radius: 4px;
     cursor: pointer;
-    transition: 0.2s;
+    transition: var(--transition);
 }
 
 .btn:hover {
@@ -108,11 +175,42 @@ body {
 }
 
 .sidebar {
-    width: 250px;
+    width: 500px;
     background-color: var(--bg-panel);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
+}
+
+#songs-panel,
+#projects-panel {
+    width: 250px !important;
+}
+
+#plugins-panel {
+    width: 50px;
+    display: flex;
+    flex-direction: column;
+}
+
+.navicon {
+    background-color: var(--bg-panel);
+    border: none;
+    color: var(--text-muted);
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1/1;
+    cursor: pointer;
+}
+
+.navicon:hover {
+    background-color: var(--bg-highlight);
+}
+
+
+.navicon.active {
+    background-color: var(--accent);
+    color: var(--text-main)
 }
 
 .panel-header {
@@ -121,6 +219,7 @@ body {
     align-items: center;
     padding: 15px;
     border-bottom: 1px solid var(--border);
+    height:50px;
 }
 
 .panel-header h2 {
@@ -147,15 +246,24 @@ body {
 /* Lists */
 .list-group {
     list-style: none;
-    overflow-y: auto;
+    overflow-y: scroll;
+    scrollbar-width: none;
     flex: 1;
+}
+
+#songsList, #projectsList{
+    height:100%;
+}
+
+.fileslist{
+    height:calc(100% - 50px);
 }
 
 .list-group li {
     padding: 12px 15px;
     cursor: pointer;
     border-bottom: 1px solid var(--border);
-    border-top:1px solid #11111100;
+    border-top: 1px solid #11111100;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -163,8 +271,8 @@ body {
     justify-content: space-between;
 }
 
-.list-group li.dragging{
-    opacity:0.5;
+.list-group li.dragging {
+    opacity: 0.5;
 }
 
 
@@ -276,6 +384,32 @@ body {
     border-color: var(--accent);
 }
 
+.notes-section {
+    width: 100%;
+    height: 100%;
+    padding: 10px;
+}
+
+#notes-textarea {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    color: var(--text-main);
+    padding: 10px;
+    border-radius: 4px;
+    outline: none;
+    font-size: 1rem;
+    line-height: 1.6;
+    resize: none;
+    margin-bottom: 20px;
+    width: 100%;
+    height: 90%;
+    font-family: var(--main-font);
+}
+
+#notes-textarea:focus {
+    border-color: var(--accent);
+}
+
 
 .prompt-modal {
     border: none;
@@ -325,7 +459,7 @@ body {
     border-radius: 4px;
     font-size: 1rem;
     outline: none;
-    transition: border-color 0.2s;
+    transition: border-color var(--transition);
     background-color: var(--bg-panel);
     color: var(--text-main);
 }
@@ -354,139 +488,352 @@ body {
 
 /* Container that spans the width of your dialog box */
 .toggle-row {
-  display: flex;
-  align-items: center;         /* Vertically centers label text and switch */
-  justify-content: space-between; /* Pushes label to far left, switch to far right */
-  width: 100%;                 /* Takes full width of the parent dialog */
-  padding: 10px 0;             /* Optional spacing between rows */
-  box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    /* Vertically centers label text and switch */
+    justify-content: space-between;
+    /* Pushes label to far left, switch to far right */
+    width: 100%;
+    /* Takes full width of the parent dialog */
+    padding: 10px 0;
+    /* Optional spacing between rows */
+    box-sizing: border-box;
 }
 
 /* Optional styling for the label text */
 .toggle-label {
-  font-family: sans-serif;
-  font-size: 16px;
-  color: var(--text-muted);
+    font-family: sans-serif;
+    font-size: 16px;
+    color: var(--text-muted);
 }
 
 /* Keep your existing .switch and .slider CSS from Option 1 below */
 .switch {
-  position: relative;
-  display: inline-block;
-  width: 60px;
-  height: 34px;
-  flex-shrink: 0; /* Prevents the switch from squishing on tiny screens */
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    flex-shrink: 0;
+    /* Prevents the switch from squishing on tiny screens */
 }
 
-.switch input { opacity: 0; width: 0; height: 0; }
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
 
 .slider {
-  position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
-  background-color: var(--bg-dark); transition: .4s; border-radius: 34px;
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--bg-dark);
+    transition: var(--transition);
+    border-radius: 34px;
 }
 
 .slider::before {
-  position: absolute; content: ""; height: 26px; width: 26px; left: 4px; bottom: 4px;
-  background-color: var(--bg-highlight); transition: .4s; border-radius: 50%;
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: var(--bg-highlight);
+    transition: var(--transition);
+    border-radius: 50%;
 }
 
-input:checked + .slider { background-color: var(--accent); }
-input:focus + .slider { box-shadow: 0 0 1px var(--accent); }
-input:checked + .slider::before { transform: translateX(26px); }
+input:checked+.slider {
+    background-color: var(--accent);
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px var(--accent);
+}
+
+input:checked+.slider::before {
+    transform: translateX(26px);
+}
 
 
 /* Container styling for alignment */
 .radio-label {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  cursor: pointer;
-  font-family: system-ui, sans-serif;
-  margin-right: 15px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+    font-family: system-ui, sans-serif;
+    margin-right: 15px;
 }
 
 /* Customizing the Radio Input wrapper */
 input[type="radio"] {
-  /* Hide the native browser styling */
-  appearance: none;
-  -webkit-appearance: none;
-  background-color: var(--bg-dark);
-  margin: 0;
+    /* Hide the native browser styling */
+    appearance: none;
+    -webkit-appearance: none;
+    background-color: var(--bg-dark);
+    margin: 0;
 
-  /* Create the custom outer circle */
-  font: inherit;
-  color: var(--bg-highlight);
-  width: 34px;
-  height: 34px;
-  border: 2px solid var(--border);
-  border-radius: 50%;
-  
-  /* Center the inner dot precisely */
-  display: grid;
-  place-content: center;
-  transition: border-color 0.2s ease-in-out;
+    /* Create the custom outer circle */
+    font: inherit;
+    color: var(--bg-highlight);
+    width: 34px;
+    height: 34px;
+    border: 2px solid var(--border);
+    border-radius: 50%;
+
+    /* Center the inner dot precisely */
+    display: grid;
+    place-content: center;
+    transition: border-color var(--transition) ease-in-out;
 }
 
 /* Hover state for better UX */
 input[type="radio"]:hover {
-  border-color: var(--accent);
+    border-color: var(--accent);
 }
 
 /* Inner dot configuration using a pseudo-element */
 input[type="radio"]::before {
-  content: "";
-  width: 25px;
-  height: 25px;
-  border-radius: 50%;
-  background-color: currentColor;
-  
-  /* Start hidden (scaled down) */
-  transform: scale(0);
-  transition: transform 0.15s ease-in-out;
+    content: "";
+    width: 25px;
+    height: 25px;
+    border-radius: 50%;
+    background-color: currentColor;
+
+    /* Start hidden (scaled down) */
+    transform: scale(0);
+    transition: transform (--transition) ease-in-out;
 }
 
 /* Checked States */
 input[type="radio"]:checked {
-  border-color: var(--bg-highlight);
+    border-color: var(--bg-highlight);
 }
 
 input[type="radio"]:checked::before {
-  /* Animate the dot into view when selected */
-  transform: scale(1);
+    /* Animate the dot into view when selected */
+    transform: scale(1);
 }
 
 /* Accessibility: Clear focus ring for keyboard users */
 input[type="radio"]:focus-visible {
-  outline: 2px solid var(--text-main);
-  outline-offset: 2px;
+    outline: 2px solid var(--text-main);
+    outline-offset: 2px;
 }
 
-.colors-list{
-    margin-top:2%;
+.colors-list {
+    margin-top: 2%;
     display: flex;
     justify-content: space-around;
 }
 
-#theme-blue{
+#theme-blue {
     background-color: #6272a4;
 }
 
-#theme-purple{
+#theme-purple {
     background-color: #8d62a4;
 }
 
-#theme-red{
+#theme-red {
     background-color: #a24848;
 }
 
-#theme-green{
+#theme-green {
     background-color: #62a462;
 }
 
-#theme-gray{
+#theme-gray {
     background-color: #9e9e9f;
 }
 
-.drag-hover{
+.drag-hover {
     border-top: solid 1px var(--danger) !important;
+}
+
+
+.panel-section {
+    display: flex;
+    flex-direction: column;
+    padding: 5%;
+    height: 100%;
+    width: 100%;
+    overflow: scroll;
+    scrollbar-width: none;
+}
+
+#comments-list {
+    height: 87%;
+    overflow: scroll;
+    scrollbar-width: none;
+}
+
+
+#comments-list li {
+    padding: 5%;
+    margin: 1%;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    cursor: pointer;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    justify-content: space-between;
+}
+
+#comments-list li:hover{
+    border-color:var(--accent);
+}
+
+#comments-list span {
+    color: var(--text-muted)
+}
+
+#comments-list p {
+    color: var(--text-main)
+}
+
+#comments-list li:hover .delete-item-btn {
+    display: block;
+}
+
+.comment-text{
+    width:87%;
+}
+
+.comment-text p{
+    overflow:wrap;
+    overflow-wrap: break-word;
+}
+
+.panel-input {
+    width: 90%;
+    padding: 12px;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color var(--transition);
+    background-color: var(--bg-panel);
+    color: var(--text-main);
+}
+
+.panel-input:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 3px var(--accent-blur);
+}
+
+.input-and-search-button {
+    box-shadow: 2px 2px 10px var(--accent-blur);
+    display: flex;
+}
+
+.input-and-search-button button {
+    width: 10%;
+}
+
+.rhyme-pill {
+    background: var(--bg-panel);
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 0.9em;
+    cursor: pointer;
+    border: 1px solid var(--bg-dark)
+}
+
+.rhyme-pill:hover {
+    border-color: var(--accent)
+}
+
+.todo-panel {
+    height:calc(100% - 50px);
+    width:100%;
+}
+
+.todo-header{
+    display: flex;
+    justify-content: space-between;
+    padding:10px;
+}
+
+.todo-list {
+    list-style: none;
+    overflow-y: scroll;
+    scrollbar-width: none;
+    height:85%;
+    margin-bottom: 20px;
+}
+
+.todo-list li {
+    padding: 12px 15px;
+    cursor: pointer;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: flex;
+    justify-content: space-between;
+}
+
+.todo-list li div {
+    width:100%;
+    height:100%;
+}
+
+.todo-list li p{
+    color:var(--text-main)
+}
+
+.todo-list li.dragging {
+    opacity: 0.5;
+}
+
+.todo-list li:hover {
+    background-color: var(--bg-highlight);
+}
+
+.todo-list li.active {
+    background-color: var(--accent);
+    color: var(--text-main);
+}
+
+.todo-list li:hover .delete-item-btn {
+    display: block;
+}
+
+.completed p {
+    color:var(--text-muted) !important;
+    text-decoration: line-through;
+}
+
+.completed {
+    display: var(--todo-display) !important;
+}
+
+#project-todo-section, #song-todo-section{
+    padding:10px;
+    height:calc(50%);
+    border-top:solid 1px var(--bg-highlight);
+}
+
+.changelog-item{
+    padding:10px;
+    border-left:1px solid var(--accent);
+    list-style:none;
+}
+
+.changelog-item ul{
+    margin-left: 15px;
+}
+
+#stats-section h4{
+    color:var(--text-muted);
+    margin-bottom:10px;
+}
+#stats-section span{
+    color:var(--text-main)
 }
